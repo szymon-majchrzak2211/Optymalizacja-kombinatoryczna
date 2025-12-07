@@ -1,3 +1,5 @@
+// greedy_random v e greed_number number_of_trials outfile
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -73,6 +75,35 @@ int is_integral_graph(int **A, int v) {
     return 1; 
 }
 
+void adjacency_to_graph6(int **A, int n, char *output)
+{
+    int bit_count = 0;
+    int value = 0;
+    int out_index = 0;
+
+    output[out_index++] = (char)(n + 63);
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < i; j++) {
+
+            value = (value << 1) | (A[i][j] ? 1 : 0);
+            bit_count++;
+
+            if (bit_count == 6) {
+                output[out_index++] = (char)(value + 63);
+                bit_count = 0;
+                value = 0;
+            }
+        }
+    }
+
+    if (bit_count > 0) {
+        value <<= (6 - bit_count);
+        output[out_index++] = (char)(value + 63);
+    }
+
+    output[out_index] = '\0';
+}
 
 
 int main(int argc, char *argv[]) {
@@ -80,6 +111,9 @@ int main(int argc, char *argv[]) {
     int e = atoi(argv[2]);
     int greed_number = atoi(argv[3]);
     int number_of_trials = atoi(argv[4]);
+    char *outfile = argv[5];
+
+    char graph6_output[1000];
 
     if (v < 1) {
         printf("Blad: v musi byc >= 1\n");
@@ -141,20 +175,23 @@ int main(int argc, char *argv[]) {
         if(is_integral_graph(A, v)) {
             licznik_grafow++;
             printf("Wykopałeś coś w: %d\n", g);
+            adjacency_to_graph6(A, v, graph6_output);
+            printf("%s\n", graph6_output);
         }
         Graphs[g] = A;
     }
     // Wyniki 
-    printf("n=%d\n", v);
-    for (int k = 0; k < number_of_trials; k++) {
-        printf("Graf %d:\n", k + 1);
-        for (int i = 0; i < v; i++) {
-            for (int j = 0; j < v; j++) {
-                printf("%d ", Graphs[k][i][j]);
-            }
-            printf("\n");
-        }
+    FILE *fp = fopen(outfile, "w");
+    if (fp == NULL) {
+        printf("Nie mozna otworzyc pliku do zapisu.\n");
+        return 1;
     }
+    for (int i = 0; i < number_of_trials; i++) {
+        adjacency_to_graph6(Graphs[i], v, graph6_output);
+        fprintf(fp, "%s\n", graph6_output);
+    }
+
+    fclose(fp);
     printf("Liczba wykopanych grafow calkowitoliczbowych: %d\n", licznik_grafow);
 
     // Czyszczenie
