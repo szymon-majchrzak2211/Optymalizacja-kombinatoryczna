@@ -32,6 +32,8 @@ Argumenty linii poleceń:
  * - <b>number_of_trials</b> – liczba wygenerowanych grafów
  * - <b>outfile</b> – plik wyjściowy do zapisu wygenerowanych grafów w formacie graph6
   
+---------------------------------------------------
+  
   ./genetic v e pop gen mut_rate elites in_file
 
   Argumenty linii poleceń:
