@@ -41,6 +41,6 @@ Argumenty linii poleceń:
  * - <b>e</b> – docelowa liczba krawędzi
  * - <b>pop</b> – rozmiar populacji
  * - <b>gen</b> – maksymalna liczba generacji
- * - <b>mut_rate</b> – parametr mutacji (mutacja z prawd. 1/MUT_RATE)
+ * - <b>mut_rate</b> – liczba mutacji na osobnika
  * - <b>elites</b> – liczba najlepszych osobników kopiowanych bez zmian
  * - <b>in_file</b> – plik wejściowy z grafami w formacie graph6
