@@ -95,8 +95,11 @@ void get_score(int **A, int v, double *score) {
     get_eigenvalues(A, v, eigenvalues);
 
     for (int i = 0; i < v; i++)
+    {
+        if (fabs(eigenvalues[i] - round(eigenvalues[i])) > EPS)
+            *score += 10.0;
         *score += fabs(eigenvalues[i] - round(eigenvalues[i]));
-
+    }
     free(eigenvalues);
 }
 
@@ -174,7 +177,7 @@ int main(int argc, char *argv[]) {
     char graph6_output[1000];
 
     if (v < 1) {
-        printf("Blad: v musi byc >= 1\n");
+        fprintf(stderr,"Blad: v musi byc >= 1\n");
         return 1;
     }
 
@@ -182,7 +185,7 @@ int main(int argc, char *argv[]) {
     int e_max = v * (v - 1) / 2;
 
     if (e < e_min || e > e_max) {
-        printf("Nie da sie stworzyc spojnego grafu o %d wierzcholkach i %d krawedziach.\n", v, e);
+        fprintf(stderr,"Nie da sie stworzyc spojnego grafu o %d wierzcholkach i %d krawedziach.\n", v, e);
         return 1;
     }
 
@@ -249,6 +252,6 @@ int main(int argc, char *argv[]) {
     fclose(fp);
     free(Graphs);
 
-    printf("Liczba wykopanych grafow calkowitoliczbowych: %d\n", licznik_grafow);
+    fprintf(stderr,"Liczba wykopanych grafow calkowitoliczbowych: %d\n", licznik_grafow);
     return 0;
 }

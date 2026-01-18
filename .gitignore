@@ -9,3 +9,8 @@ hi.py
 out.txt
 docs
 genetic
+log*
+wynik_*
+bench.sh
+genetic_cros.c
+g.svg

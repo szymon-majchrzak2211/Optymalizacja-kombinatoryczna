@@ -10,7 +10,7 @@
  * - <b>E</b> – docelowa liczba krawędzi
  * - <b>POP</b> – rozmiar populacji
  * - <b>GEN</b> – maksymalna liczba generacji
- * - <b>MUT_RATE</b> – parametr mutacji (mutacja z prawd. 1/MUT_RATE)
+ * - <b>MUT_RATE</b> – liczba mutacji na osobnika
  * - <b>ELITES</b> – liczba najlepszych osobników kopiowanych bez zmian
  * - <b>in_file</b> – plik wejściowy z grafami w formacie graph6
  *
@@ -190,8 +190,11 @@ void integral_grade(int **A, int v, double *score) {
     get_eigenvalues(A, v, eigenvalues);
 
     for (int i = 0; i < v; i++)
-        *score += fabs(eigenvalues[i] - round(eigenvalues[i])) * 100.0;
-
+    {
+        if (fabs(eigenvalues[i] - round(eigenvalues[i])) > EPS)
+            *score += 100.0;
+        *score += fabs(eigenvalues[i] - round(eigenvalues[i])) * 10.0;
+    }
     free(eigenvalues);
 }
 
@@ -205,8 +208,8 @@ void integral_grade(int **A, int v, double *score) {
  */
 double fitness(Graph *g, int V, int E) {
     double f = 0.0;
-    if (!is_connected(g, V)) f += 5000;
-    f += abs(edge_count(g, V) - E) * 500;
+    if (!is_connected(g, V)) f += 50000;
+    f += abs((double)(edge_count(g, V) - E)) * 5000;
     integral_grade(g->adj, V, &f);
     return f;
 }
@@ -224,20 +227,6 @@ Graph tournament(Graph *pop, int POP) {
     return pop[a].fitness < pop[b].fitness ? pop[a] : pop[b];
 }
 
-/**
- * @brief Krzyżowanie dwóch osobników
- *
- * @param c potomek
- * @param a pierwszy rodzic
- * @param b drugi rodzic
- * @param V liczba wierzchołków
- */
-void crossover(Graph *c, Graph *a, Graph *b, int V) {
-    for (int i = 0; i < V; i++)
-        for (int j = i + 1; j < V; j++)
-            c->adj[i][j] = c->adj[j][i] =
-                (rand() % 2) ? a->adj[i][j] : b->adj[i][j];
-}
 
 /**
  * @brief Mutacja grafu
@@ -247,11 +236,12 @@ void crossover(Graph *c, Graph *a, Graph *b, int V) {
  * @param MUT_RATE parametr mutacji
  */
 void mutate(Graph *g, int V, int MUT_RATE) {
-    if (rand() % MUT_RATE) return;
-    int i = rand() % V;
-    int j = rand() % V;
-    if (i != j)
-        g->adj[i][j] = g->adj[j][i] ^= 1;
+    for(int i=0; i<MUT_RATE; i++) {
+        int i = rand() % V;
+        int j = rand() % V;
+        if (i != j)
+            g->adj[i][j] = g->adj[j][i] ^= 1;
+    }
 }
 
 /**
@@ -338,7 +328,6 @@ int main(int argc, char **argv) {
     }
 
     initial_population(pop, POP, V, E, in_file);
-
     for (int g = 0; g < GEN; g++) {
         qsort(pop, POP, sizeof(Graph), cmp_graph);
 
@@ -349,9 +338,10 @@ int main(int argc, char **argv) {
         }
 
         for (int i = ELITES; i < POP; i++) {
-            Graph p1 = tournament(pop, ELITES);
-            Graph p2 = tournament(pop, ELITES);
-            crossover(&newpop[i], &p1, &p2, V);
+            Graph g = tournament(pop, POP);
+            for (int k = 0; k < V; k++)
+                memcpy(newpop[i].adj[k], g.adj[k], sizeof(int) * V);
+            newpop[i].fitness = g.fitness;
             mutate(&newpop[i], V, MUT_RATE);
             newpop[i].fitness = fitness(&newpop[i], V, E);
         }
@@ -361,19 +351,15 @@ int main(int argc, char **argv) {
         newpop = tmp;
 
         if (g % 200 == 0)
-            fprintf(stderr, "Gen %d | best fitness = %f\n", g, pop[0].fitness);
+            fprintf(stderr, "Gen %d | best fitness = %.7f\n", g, pop[0].fitness);
 
         if (is_integral(&pop[0], V)) {
             char out[1000];
             adjacency_to_graph6(pop[0].adj, V, out);
             printf("%s\n", out);
+            fprintf(stderr, "Gen %d | best fitness = %f\n", g, pop[0].fitness);
             break;
         }
-    }
-
-    for (int i = 0; i < POP; i++) {
-        graph_free(&pop[i], V);
-        graph_free(&newpop[i], V);
     }
 
     free(pop);
